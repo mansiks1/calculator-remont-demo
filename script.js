@@ -179,7 +179,79 @@ function подключитьКалькулятор() {
   обновитьРезультат();
 }
 
+function поляЗаявки() {
+  return `<div class="field"><label for="lead-name">${текст(site.form.name)}</label>
+    <input class="text-input" id="lead-name" name="name" autocomplete="given-name" maxlength="80" required placeholder="${текст(site.form.namePlaceholder)}"></div>
+    <div class="field"><label for="lead-contact">${текст(site.form.contact)}</label>
+    <input class="text-input" id="lead-contact" name="contact" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="100" required aria-describedby="contact-hint" placeholder="${текст(site.form.contactPlaceholder)}">
+    <p id="contact-hint" class="field-hint muted">${текст(site.form.contactHint)}</p></div>
+    <label class="consent-label" for="lead-consent"><input id="lead-consent" name="consent" type="checkbox" required><span>${текст(site.form.consent)}</span></label>`;
+}
+
+function отрисоватьФорму() {
+  const диалог = document.createElement('dialog');
+  диалог.id = 'lead-dialog';
+  диалог.className = 'lead-dialog';
+  диалог.setAttribute('aria-labelledby', 'form-title');
+  диалог.innerHTML = `<div class="dialog-top"><h2 id="form-title">${текст(site.form.title)}</h2>
+    <button class="close-button" id="close-form" type="button">${текст(site.form.close)}</button></div>
+    <div id="form-content"><p class="muted">${текст(site.form.subtitle)}</p>
+    <form class="lead-form" id="lead-form">${поляЗаявки()}<p class="demo-note">${текст(site.form.demoNote)}</p>
+    <button class="button" type="submit">${текст(site.form.submit)}${стрелка()}</button></form></div>
+    <div id="form-success" class="success-panel" role="status" aria-live="polite" tabindex="-1" hidden>
+    <span class="success-mark" aria-hidden="true">${текст(site.ui.check)}</span>
+    <p>${текст(site.form.success)}</p><p class="demo-note">${текст(site.form.successNote)}</p>
+    <button class="button" id="done-form" type="button">${текст(site.form.done)}</button></div>`;
+  document.body.append(диалог);
+}
+
+function проверитьКонтакты() {
+  const имя = элемент('lead-name');
+  const контакт = элемент('lead-contact');
+  const значение = контакт.value.trim();
+  const цифры = значение.replace(/\D/g, '');
+  const телефон = /^\+?[\d\s()-]+$/.test(значение) && цифры.length >= 10 && цифры.length <= 15;
+  const телеграм = /^@[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(значение);
+  имя.setCustomValidity(имя.value.trim() ? '' : site.validation.name);
+  контакт.setCustomValidity(телефон || телеграм ? '' : site.validation.contact);
+}
+
+function открытьФорму() {
+  элемент('lead-form').reset();
+  ['lead-name', 'lead-contact'].forEach((id) => элемент(id).setCustomValidity(''));
+  элемент('form-content').hidden = false;
+  элемент('form-success').hidden = true;
+  элемент('lead-dialog').showModal();
+  элемент('lead-name').focus();
+}
+
+function отправитьЗаявку(событие) {
+  событие.preventDefault();
+  проверитьКонтакты();
+  if (!элемент('lead-form').reportValidity()) return;
+  // Отправка имитируется. Здесь можно вызвать собственный HTTPS-обработчик
+  // для Google Forms или Telegram-бота и дождаться подтверждения отправки.
+  // Токен бота хранится только на сервере; в браузер его не добавляем.
+  элемент('lead-form').reset();
+  элемент('form-content').hidden = true;
+  элемент('form-success').hidden = false;
+  элемент('form-success').focus();
+}
+
+function подключитьФорму() {
+  отрисоватьФорму();
+  элемент('open-form').addEventListener('click', открытьФорму);
+  ['close-form', 'done-form'].forEach((id) => элемент(id).addEventListener('click', () => элемент('lead-dialog').close()));
+  элемент('lead-dialog').addEventListener('close', () => {
+    элемент('lead-form').reset();
+    элемент('open-form').focus();
+  });
+  элемент('lead-form').addEventListener('input', проверитьКонтакты);
+  элемент('lead-form').addEventListener('submit', отправитьЗаявку);
+}
+
 if (typeof document !== 'undefined') {
   отрисоватьСайт();
   подключитьКалькулятор();
+  подключитьФорму();
 }
