@@ -45,7 +45,7 @@ function поляКвартиры() {
     <p id="area-hint" class="field-hint muted">${текст(фраза(site.calculator.areaHint))}</p>
     <p id="area-error" class="field-error" aria-live="polite"></p>
     <label for="area-range" hidden>${текст(site.calculator.range)}</label>
-    <input class="area-range" id="area-range" type="range" aria-label="${текст(site.calculator.range)}" min="${настройки.minArea}" max="${настройки.maxArea}" step="any" value="${настройки.defaultArea}">
+    <input class="area-range" id="area-range" type="range" aria-label="${текст(site.calculator.range)}" min="${настройки.minArea}" max="${настройки.maxArea}" step="1" value="${настройки.defaultArea}">
     </div><div class="field"><label for="rooms">${текст(site.calculator.rooms)}</label>
     <select id="rooms" name="rooms">${site.rooms.map((комнаты) => `<option value="${текст(комнаты.id)}" ${комнаты.id === настройки.defaultRooms ? 'selected' : ''}>${текст(комнаты.label)}</option>`).join('')}</select></div></div>`;
 }
@@ -110,4 +110,76 @@ function отрисоватьСайт() {
     отрисоватьОКомпании, отрисоватьОтзывы, отрисоватьПодвал].forEach((отрисовать) => отрисовать());
 }
 
-if (typeof document !== 'undefined') отрисоватьСайт();
+// Чистая функция: не обращается к DOM, не меняет аргументы или данные сайта.
+export function calculatePrice(area, type, rooms, selectedOptions = []) {
+  if (!Number.isFinite(area) || area < site.settings.minArea || area > site.settings.maxArea) {
+    throw new RangeError(фраза(site.validation.area));
+  }
+  if (!Object.hasOwn(site.pricing, type)) throw new RangeError(site.validation.type);
+  const комнаты = site.rooms.find((пункт) => пункт.id === String(rooms));
+  if (!комнаты) throw new RangeError(site.validation.rooms);
+  if (!Array.isArray(selectedOptions)) throw new TypeError(site.validation.options);
+  const доплаты = [...new Set(selectedOptions)].reduce((сумма, id) => {
+    const опция = site.options.find((пункт) => пункт.id === id);
+    if (!опция) throw new RangeError(site.validation.options);
+    return сумма + опция.price;
+  }, 0);
+  const стоимость = area * site.pricing[type].price * комнаты.multiplier + доплаты;
+  return { price: Math.round(стоимость / site.settings.rounding) * site.settings.rounding, days: site.deadlines[type] };
+}
+
+function параметрыРасчёта() {
+  const данные = new FormData(элемент('calculator-form'));
+  return [элемент('area').valueAsNumber, данные.get('type'), данные.get('rooms'), данные.getAll('options')];
+}
+
+function строкаСметы(подпись, значение, класс = '') {
+  return `<div class="cost-row ${класс}"><dt>${текст(подпись)}</dt><dd>${текст(значение)}</dd></div>`;
+}
+
+function показатьСтоимость(параметры) {
+  const итог = calculatePrice(...параметры);
+  const база = calculatePrice(...параметры.slice(0, 3), []).price;
+  return `<span class="total-price">${текст(деньги(итог.price))}</span><dl class="cost-details">
+    ${строкаСметы(site.result.base, деньги(база))}
+    ${строкаСметы(site.result.options, деньги(итог.price - база))}
+    ${строкаСметы(site.result.deadline, `${итог.days} ${site.result.days}`, 'deadline-row')}</dl>`;
+}
+
+function обновитьРезультат() {
+  const поле = элемент('area');
+  let разметка;
+  try {
+    разметка = показатьСтоимость(параметрыРасчёта());
+    поле.setCustomValidity('');
+    поле.setAttribute('aria-invalid', 'false');
+    элемент('area-error').textContent = '';
+    элемент('area-range').value = поле.value;
+    элемент('open-form').disabled = false;
+  } catch (ошибка) {
+    поле.setCustomValidity(ошибка.message);
+    поле.setAttribute('aria-invalid', 'true');
+    элемент('area-error').textContent = ошибка.message;
+    элемент('open-form').disabled = true;
+    разметка = `<p class="invalid-result">${текст(site.result.invalid)}</p><p class="result-note">${текст(site.result.invalidHint)}</p>`;
+  }
+  // Одинаковый результат не объявляем повторно после событий input и change.
+  if (элемент('live-result').innerHTML !== разметка) элемент('live-result').innerHTML = разметка;
+}
+
+function подключитьКалькулятор() {
+  const форма = элемент('calculator-form');
+  const обновить = (событие) => {
+    if (событие.target.id === 'area-range') элемент('area').value = событие.target.value;
+    обновитьРезультат();
+  };
+  форма.addEventListener('input', обновить);
+  форма.addEventListener('change', обновить);
+  форма.addEventListener('submit', (событие) => событие.preventDefault());
+  обновитьРезультат();
+}
+
+if (typeof document !== 'undefined') {
+  отрисоватьСайт();
+  подключитьКалькулятор();
+}
