@@ -45,7 +45,7 @@ button, input, select, a { touch-action: manipulation; }
 .muted { color: var(--muted); }
 .section-heading { margin-bottom: var(--s8); }
 .section-heading h2 { margin-block: var(--s4); }
-.button { min-height: var(--control); display: inline-flex; align-items: center; justify-content: center; gap: var(--s5); padding: var(--s3) var(--s6); border: var(--border) solid transparent; border-radius: var(--radius); background: var(--accent); font-weight: var(--weight-bold); transition: background var(--duration); }
+.button { min-height: var(--control); display: inline-flex; align-items: center; justify-content: center; gap: var(--s5); padding: var(--s3) var(--s6); border: var(--border) solid transparent; border-radius: var(--radius); background: var(--accent); color: var(--ink); font-weight: var(--weight-bold); transition: background var(--duration); }
 .button:hover { background: var(--accent-hover); }
 .button:disabled { opacity: .55; cursor: not-allowed; }
 .arrow { font-size: var(--text-lg); line-height: var(--heading-leading); }
