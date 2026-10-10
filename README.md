@@ -1,4 +1,4 @@
-# Ремонт Пример — калькулятор ремонта
+# [Ремонт Пример — калькулятор ремонта](https://mansiks1.github.io/calculator-remont-demo/)
 
 Одностраничное демо для портфолио на HTML5, CSS3 и JavaScript с ES-модулями.
 Компания, тарифы, контакты и три отзыва вымышлены. Форма ничего не отправляет
@@ -78,17 +78,17 @@ calculatePrice(80, 'capital', '3', ['electrical']);
 
 ## Как опубликовать на GitHub Pages
 
-Репозиторий подготовлен как приватный. Публикация выполняется только после
-явной команды владельца «публикуем». Следующие команды пока выполнять не нужно:
+Публикация на GitHub Pages разрешена владельцем. Источник сайта — ветка `main`,
+корень репозитория. Для первоначального включения использованы команды ниже;
+повторять их после каждой правки не нужно:
 
 ```powershell
 gh repo edit mansiks1/calculator-remont-demo --visibility public --accept-visibility-change-consequences
 gh api -X POST repos/mansiks1/calculator-remont-demo/pages -f "source[branch]=main" -f "source[path]=/"
 ```
 
-Ожидаемый адрес после успешной публикации:
-`https://mansiks1.github.io/calculator-remont-demo/`.
-Появление сайта может занять несколько минут. Статус можно проверить:
+Адрес сайта: [mansiks1.github.io/calculator-remont-demo](https://mansiks1.github.io/calculator-remont-demo/).
+Обновление сайта после `git push` может занять несколько минут. Статус можно проверить:
 
 ```powershell
 gh api repos/mansiks1/calculator-remont-demo/pages
