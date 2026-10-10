@@ -10,6 +10,7 @@ const деньги = (сумма) => new Intl.NumberFormat(site.settings.locale,
 }).format(сумма);
 const фраза = (шаблон) => шаблон.replace('{min}', site.settings.minArea).replace('{max}', site.settings.maxArea);
 const стрелка = () => `<span class="arrow" aria-hidden="true">${текст(site.ui.arrow)}</span>`;
+let последняяРазметка = '';
 
 function логотип() {
   return `<a class="brand" href="#hero"><span class="brand-mark" aria-hidden="true"></span>
@@ -164,7 +165,10 @@ function обновитьРезультат() {
     разметка = `<p class="invalid-result">${текст(site.result.invalid)}</p><p class="result-note">${текст(site.result.invalidHint)}</p>`;
   }
   // Одинаковый результат не объявляем повторно после событий input и change.
-  if (элемент('live-result').innerHTML !== разметка) элемент('live-result').innerHTML = разметка;
+  if (последняяРазметка !== разметка) {
+    элемент('live-result').innerHTML = разметка;
+    последняяРазметка = разметка;
+  }
 }
 
 function подключитьКалькулятор() {
